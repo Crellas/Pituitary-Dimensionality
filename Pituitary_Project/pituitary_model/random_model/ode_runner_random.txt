@@ -1,0 +1,60 @@
+#! /bin/tcsh
+
+# create ode files by substituting some parameter values
+# in template (.form) files
+# then run xpp in silent mode
+# repeat for each parameter value
+
+
+declare -a ODE_FILE=jela2018
+declare -a DIR=/auto_outputs
+
+# Read data from command line arguments
+# Number of iterations
+if [ -z "$1" ]; then
+ iter=10
+else
+ iter=$1
+fi
+
+# Begin the iterations
+counter=0
+while [ $counter -lt $iter ]; do
+ 
+ # Calculate % completed for the user's sanity
+ declare -a perc=$(bc <<<"scale=2 ; (($counter + 1) / $iter)*100")
+ echo "$perc" % complete 
+
+ # Generate the random positions in objective space
+ declare -a GKVAL=$(python -c "import random;print(random.uniform(0, 10))")
+ declare -a GCALVAL=$(python -c "import random;print(random.uniform(0, 5))")
+ declare -a GSKVAL=$(python -c "import random;print(random.uniform(0, 5))")
+
+ # Modify the .ode file with the generated values in correct syntax
+ sed -e "/_PARAMS_/s//gk=$GKVAL  gcal=$GCALVAL  gsk=$GSKVAL/g;" "$ODE_FILE".ode > "$ODE_FILE".tmp.ode
+
+ # Run the ODE model (which returns output.dat)
+ /Applications/xppaut "$ODE_FILE".tmp.ode -silent >& /dev/null
+
+ # Define the name of the data and output file
+ declare -a DATA_FILE=$PWD"/output.dat"
+ declare -a OUTPUT_FILE=$PWD"$DIR"/"$ODE_FILE"__GKVAL_"$GKVAL"__GCALVAL_"$GCALVAL"__GSKVAL_"$GSKVAL".dat
+
+ # Remove any existing output file
+ rm -f "$OUTPUT_FILE"
+
+ # Move output.dat to the output file
+ mv "$DATA_FILE" "$OUTPUT_FILE"
+ 
+ # Remove the temporary modified .ode file
+ rm "$ODE_FILE".tmp.ode
+ 
+ # Iterate the counter
+ ((counter++))
+
+done
+
+
+echo 
+echo "done"
+echo

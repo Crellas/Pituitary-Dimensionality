@@ -1,0 +1,70 @@
+#! /bin/tcsh
+
+# create ode files by substituting some parameter values
+# in template (.form) files
+# then run xpp in silent mode
+# repeat for each parameter value
+
+# Define the file names
+declare -a ODE_FILE=jela2018
+declare -a DIR=/auto_outputs
+
+# Read in the point parameters
+declare -a minx=$1
+declare -a miny=$2
+declare -a minz=$3
+declare -a maxx=$4
+declare -a maxy=$5
+declare -a maxz=$6
+
+declare -a samples=$7
+
+# Generate the two lists
+declare -a gk=($(python -c "import numpy;print(numpy.linspace($minx, $maxx, $samples))"))
+declare -a gcal=($(python -c "import numpy;print(numpy.linspace($miny, $maxy, $samples))"))
+declare -a gsk=($(python -c "import numpy;print(numpy.linspace($minz, $maxz, $samples))"))
+
+# Iterate over the lists of variables
+declare -a len=${#gk[*]}
+len="$((len - 1))"
+
+counter=0
+for ((i=1;i<$len;i++)); do
+ 
+ # Calculate % completed for the user's sanity
+ declare -a perc=$(bc <<<"scale=2 ; (($counter + 1) / ${#gk[*]})*100")
+ echo "$perc" % complete 
+
+ # Get the objective values from the lists
+ declare -a GKVAL=${gk[i]}
+ declare -a GCALVAL=${gcal[i]}
+ declare -a GSKVAL=${gsk[i]}
+
+ # Modify the .ode file with the values in correct syntax
+ sed -e "/_PARAMS_/s//gk=$GKVAL  gcal=$GCALVAL  gsk=$GSKVAL/g;" "$ODE_FILE".ode > "$ODE_FILE".tmp.ode
+
+ # Run the ODE model (which returns output.dat)
+ /Applications/xppaut "$ODE_FILE".tmp.ode -silent >& /dev/null
+
+ # Define the name of the data and output file
+ declare -a DATA_FILE=$PWD"/output.dat"
+ declare -a OUTPUT_FILE=$PWD"$DIR"/"$ODE_FILE"__GKVAL_"$GKVAL"__GCALVAL_"$GCALVAL"__GSKVAL_"$GSKVAL".dat
+
+ # Remove any existing output file
+ rm -f "$OUTPUT_FILE"
+
+ # Move output.dat to the output file
+ mv "$DATA_FILE" "$OUTPUT_FILE"
+ 
+ # Remove the temporary modified .ode file
+ rm "$ODE_FILE".tmp.ode
+ 
+ # Iterate the counter
+ ((counter++))
+
+done
+
+
+echo 
+echo "done"
+echo
