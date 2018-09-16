@@ -13,7 +13,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 ## Import data to a pandas dataframe
 data_file = '/Users/jamesashford/Documents/NatSci Exeter/2017-18 (Third Year)/Summer Work/Pituitary Dimensionality Project - J. Tabak/Neural Network/SavedTXTs/10000_iterations_3var_NewMethod.txt'
-#Read data and headers from file
+# Read data and headers from file
 data = pd.read_csv(data_file, header=0)
 column_headers = data.columns.values
 # Get the feature and label data
