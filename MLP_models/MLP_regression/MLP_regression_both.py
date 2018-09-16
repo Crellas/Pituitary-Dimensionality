@@ -16,7 +16,7 @@ id_labels = {"GK": 0,
              "GSK": 2}
 label_id = id_labels[display_label]
 
-data_file = '/Users/jamesashford/Documents/NatSci Exeter/2017-18 (Third Year)/Summer Work/Pituitary Dimensionality Project - J. Tabak/Neural Network/SavedTXTs/10100_iterations_3var_4labels.txt'
+data_file = '/Users/jamesashford/Documents/NatSci Exeter/2017-18 (Third Year)/Summer Work/Pituitary Dimensionality Project - J. Tabak/Neural Network/SavedTXTs/10000_iterations_3var_NewMethod.txt'
 #Read data from file
 data = pd.read_csv(data_file, header=0)
 #Read headers from file

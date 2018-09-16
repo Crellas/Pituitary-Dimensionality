@@ -1,0 +1,62 @@
+% Model of pituitary cell electrical activity
+% Ca2+ current parameters based on  Lledo et al 1990
+% K+ current parameters based on Herrington & Lingle 1994
+%
+% Model used in Tabak et al JNS 2011
+%
+
+
+init v=-60 n=0.1 f=0.01 c=0.1
+
+par vca=60 vk=-75 vl=-50
+par Cm=10
+% par gk=_GKVAL_  gcal=_GCALVAL_  gsk=0.  gbk=0.5  gl=0.
+par _PARAMS_  gbk=0.  gl=0.
+par vn=-5   vm=-20  vf=-20
+par sn=10   sm=12   sf=2
+par taun=30 taubk=5
+par ff=0.01 alpha=0.0015 kc=0.12 ks=0.4
+par auto=0, cpar=0
+par noise=0
+
+wiener w
+
+% use auto=0 for simulation
+% use auto=1 to make bifurcation diagram with Ca as parameter (cpar)
+cd=(1-auto)*c+auto*cpar
+
+phik=1/(1+exp((vn-v)/sn))
+phif=1/(1+exp((vf-v)/sf))
+phical=1/(1+exp((vm-v)/sm))
+cinf=cd^2/(cd^2+ks^2)
+
+ica=gcal*phical*(v-vca)
+isk=gsk*cinf*(v-vk)
+ibk=gbk*f*(v-vk)
+ikdr=gk*n*(v-vk)
+ileak=gl*(v-vl)
+
+aux tsec=t/1000
+aux gkout = gk
+aux gcalout = gcal
+aux gskout = gsk
+
+ik = isk + ibk + ikdr
+inoise = noise*w
+
+v'= -(ica+ik+inoise+ileak)/Cm
+n'= (phik-n)/taun
+f'= (phif-f)/taubk
+c'= -ff*(alpha*ica+kc*c)
+
+aux itotal = -(ica+ik+inoise+ileak)/Cm
+
+
+@ dt=0.05, total=15000, maxstor=20000000
+@ njmp=20
+@ bounds=10000000, xp=tsec, yp=v
+@ xlo=0, xhi=15, ylo=-75, yhi=10
+@ method=Euler
+done
+
+
